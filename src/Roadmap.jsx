@@ -180,10 +180,14 @@ export default function Roadmap(){
 
   const mobNavRef = useRef(null);
   const [navAtEnd, setNavAtEnd] = useState(false);
+  const [navAtStart, setNavAtStart] = useState(true);
   useEffect(() => {
     const el = mobNavRef.current;
     if (!el) return;
-    const check = () => setNavAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 8);
+    const check = () => {
+      setNavAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 8);
+      setNavAtStart(el.scrollLeft <= 8);
+    };
     check();
     el.addEventListener('scroll', check, {passive: true});
     window.addEventListener('resize', check);
@@ -240,6 +244,7 @@ export default function Roadmap(){
         .mob-nav{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
         .mob-nav::-webkit-scrollbar{display:none}
         .mob-nav-fade{position:absolute;right:0;top:0;bottom:0;width:64px;background:linear-gradient(to right, transparent, var(--bg));display:flex;align-items:center;justify-content:flex-end;padding-right:12px;pointer-events:none;transition:opacity .25s}
+        .mob-nav-fade-left{position:absolute;left:0;top:0;bottom:0;width:64px;background:linear-gradient(to left, transparent, var(--bg));display:flex;align-items:center;justify-content:flex-start;padding-left:12px;pointer-events:none;transition:opacity .25s}
         .mob-nav-arrow{pointer-events:auto;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;padding:0;transition:background .15s}
         .mob-nav-arrow:hover{background:var(--hl)}
         .mob-b{white-space:nowrap;padding:5px 11px;border-radius:14px;border:1px solid var(--border);background:none;color:var(--muted);font-size:10.5px;font-family:'Open Sans', Helvetica, Arial, sans-serif;cursor:pointer;font-weight:500}
@@ -325,6 +330,11 @@ export default function Roadmap(){
       <div className="mob-nav-wrap print-hide">
         <div className="mob-nav" ref={mobNavRef}>
           {PHASES.map(p=><button key={p.id} className={`mob-b ${phase===p.id?"on":""}`} onClick={()=>setPhase(p.id)}>{p.num} &bull; {p.label}</button>)}
+        </div>
+        <div className="mob-nav-fade-left" style={{opacity: navAtStart ? 0 : 1, pointerEvents: navAtStart ? 'none' : 'auto'}}>
+          <button className="mob-nav-arrow" onClick={() => mobNavRef.current?.scrollBy({left: -180, behavior: 'smooth'})}>
+            <ChevronRight size={14} strokeWidth={2.5} style={{color:"var(--sub)", transform:"rotate(180deg)"}}/>
+          </button>
         </div>
         <div className="mob-nav-fade" style={{opacity: navAtEnd ? 0 : 1, pointerEvents: navAtEnd ? 'none' : 'auto'}}>
           <button className="mob-nav-arrow" onClick={() => mobNavRef.current?.scrollBy({left: 180, behavior: 'smooth'})}>
