@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Scale, Briefcase, Coffee, ChevronRight, AlertTriangle, Clock, Target, Link2, Sun, Moon, Plane, ArrowUpRight, MapPin, Check } from "lucide-react";
 
 const GOALS = {
@@ -178,6 +178,18 @@ export default function Roadmap(){
   
   const domColor = GOAL_COLORS_RAW[cur.dominant]||GOAL_COLORS_RAW.pdh;
 
+  const mobNavRef = useRef(null);
+  const [navAtEnd, setNavAtEnd] = useState(false);
+  useEffect(() => {
+    const el = mobNavRef.current;
+    if (!el) return;
+    const check = () => setNavAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 8);
+    check();
+    el.addEventListener('scroll', check, {passive: true});
+    window.addEventListener('resize', check);
+    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); };
+  }, []);
+
   return(
     <div className={dark?"root dark":"root"} style={{background:dark?"#0E0D0B":"#EFEBE4",minHeight:"100vh"}}>
       <style>{`
@@ -217,15 +229,19 @@ export default function Roadmap(){
         @keyframes fi{from{opacity:0}to{opacity:1}}
         @keyframes stamp{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(-4deg)}}
         .layout{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 48px)}
-        @media(max-width:840px){.layout{grid-template-columns:1fr}.sidebar{display:none}.mob-nav{display:flex !important}}
+        @media(max-width:1024px){.layout{grid-template-columns:1fr}.sidebar{display:none !important}.mob-nav-wrap{display:block !important;position:sticky !important;top:48px;background:var(--bg);z-index:9;border-bottom:1px solid var(--border)}.mob-b{font-size:11px;padding:7px 13px;border-radius:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}}
         .sidebar{border-right:1px solid var(--border);position:sticky;top:48px;height:calc(100vh - 48px);overflow-y:auto;display:flex;flex-direction:column}
         .sidebar::-webkit-scrollbar{width:0}
         .ph-btn{display:flex;align-items:flex-start;gap:12px;padding:9px 20px;cursor:pointer;border:none;background:none;text-align:left;width:100%;color:var(--text);transition:all .12s;position:relative;font-family:'Open Sans', Helvetica, Arial, sans-serif}
         .ph-btn:hover{background:var(--hl)}
         .ph-btn.on{background:var(--hl)}
         .spine{position:absolute;left:33px;top:0;bottom:0;width:1px;background:var(--border)}
-        .mob-nav{display:none;gap:6px;padding:10px 20px;overflow-x:auto;border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch}
+        .mob-nav-wrap{display:none;position:relative}
+        .mob-nav{display:flex;gap:8px;padding:10px 14px;overflow-x:auto;-webkit-overflow-scrolling:touch}
         .mob-nav::-webkit-scrollbar{display:none}
+        .mob-nav-fade{position:absolute;right:0;top:0;bottom:0;width:64px;background:linear-gradient(to right, transparent, var(--bg));display:flex;align-items:center;justify-content:flex-end;padding-right:12px;pointer-events:none;transition:opacity .25s}
+        .mob-nav-arrow{pointer-events:auto;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;padding:0;transition:background .15s}
+        .mob-nav-arrow:hover{background:var(--hl)}
         .mob-b{white-space:nowrap;padding:5px 11px;border-radius:14px;border:1px solid var(--border);background:none;color:var(--muted);font-size:10.5px;font-family:'Open Sans', Helvetica, Arial, sans-serif;cursor:pointer;font-weight:500}
         .mob-b.on{background:var(--accent);color:var(--bg);border-color:var(--accent)}
         .hero-card{border-radius:16px;padding:28px 32px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;border:none}
@@ -254,15 +270,40 @@ export default function Roadmap(){
           .hero-card { margin-bottom: 20px !important; box-shadow: none !important; border: 2px solid var(--border) !important; }
           .step-row { margin-bottom: 10px !important; border: 1px solid var(--border) !important; }
         }
+        .topbar{height:48px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+        .topbar-right{display:flex;align-items:center;gap:14px}
+        .topbar-sep{width:1px;height:14px;background:var(--border);flex-shrink:0}
+        .topbar-cost{font-size:10px;font-weight:500;color:var(--muted);white-space:nowrap}
+        .main-pane{background:var(--card);flex:1;min-width:0;overflow-x:hidden}
+        .main-content{padding:44px 52px 80px;overflow:hidden}
+        .footer{border-top:1px solid var(--border);padding:24px 52px;text-align:center}
+        @media(max-width:1024px){
+          .topbar{padding:0 16px}
+          .topbar-right{gap:10px}
+          .main-content{padding:28px 28px 60px}
+          .footer{padding:20px 28px}
+        }
+        @media(max-width:540px){
+          .topbar-cost{display:none}
+          .topbar-sep{display:none}
+        }
+        @media(max-width:480px){
+          .topbar{padding:0 14px}
+          .main-content{padding:18px 16px 48px}
+          .footer{padding:18px 16px}
+          .hero-card{padding:20px 18px !important;border-radius:12px !important}
+          .step-row{padding:10px 10px;gap:10px}
+          .mob-b{font-size:10.5px;padding:6px 11px}
+        }
       `}</style>
 
       {/* TOP BAR */}
-      <div className="print-hide" style={{height:48,display:"flex",justifyContent:"space-between",alignItems:"center",padding:"0 24px",borderBottom:"1px solid var(--border)",position:"sticky",top:0,background:dark?"#0E0D0B":"#EFEBE4",zIndex:10}}>
+      <div className="print-hide topbar" style={{background:dark?"#0E0D0B":"#EFEBE4"}}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
           <Plane size={14} strokeWidth={2} style={{color:"var(--accent)"}}/>
           <span style={{fontFamily:"'Clash Display',sans-serif",fontSize:16,fontWeight:600,color:"var(--text)",letterSpacing:"-0.02em"}}>Your move to Spain</span>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:14}}>
+        <div className="topbar-right">
           <div style={{display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:10,fontWeight:600,color:"var(--muted)",width:24,textAlign:"right"}}>{progress}%</span>
             <div style={{position:"relative",width:72,height:4,borderRadius:3,background:"var(--border)"}}>
@@ -272,8 +313,8 @@ export default function Roadmap(){
               </div>
             </div>
           </div>
-          <div style={{width:1,height:14,background:"var(--border)"}}/>
-          <span style={{fontSize:10,fontWeight:500,color:"var(--muted)"}}>{costs.usd} + {costs.eur}</span>
+          <div className="topbar-sep"/>
+          <span className="topbar-cost">{costs.usd} + {costs.eur}</span>
           <button onClick={()=>setDark(!dark)} style={{background:"none",border:"1px solid var(--border)",borderRadius:6,padding:"3px 10px",cursor:"pointer",display:"flex",alignItems:"center",gap:4,fontSize:10,fontWeight:500,color:"var(--muted)",fontFamily:"'Open Sans', Helvetica, Arial, sans-serif"}}>
             {dark?<Sun size={10} strokeWidth={2}/>:<Moon size={10} strokeWidth={2}/>}
           </button>
@@ -281,8 +322,15 @@ export default function Roadmap(){
       </div>
 
       {/* MOBILE NAV */}
-      <div className="mob-nav print-hide">
-        {PHASES.map(p=><button key={p.id} className={`mob-b ${phase===p.id?"on":""}`} onClick={()=>setPhase(p.id)}>{p.num} &bull; {p.label}</button>)}
+      <div className="mob-nav-wrap print-hide">
+        <div className="mob-nav" ref={mobNavRef}>
+          {PHASES.map(p=><button key={p.id} className={`mob-b ${phase===p.id?"on":""}`} onClick={()=>setPhase(p.id)}>{p.num} &bull; {p.label}</button>)}
+        </div>
+        <div className="mob-nav-fade" style={{opacity: navAtEnd ? 0 : 1, pointerEvents: navAtEnd ? 'none' : 'auto'}}>
+          <button className="mob-nav-arrow" onClick={() => mobNavRef.current?.scrollBy({left: 180, behavior: 'smooth'})}>
+            <ChevronRight size={14} strokeWidth={2.5} style={{color:"var(--sub)"}}/>
+          </button>
+        </div>
       </div>
 
       <div className="layout">
@@ -371,8 +419,8 @@ export default function Roadmap(){
         </div>
 
         {/* MAIN PANE */}
-        <div style={{background:"var(--card)", flex:1, minWidth:0}}>
-          <div style={{padding:"44px 52px 80px",overflow:"hidden"}} key={phase}>
+        <div className="main-pane">
+          <div className="main-content" key={phase}>
             <div style={{maxWidth:720,animation:"si .5s cubic-bezier(0.34, 1.56, 0.64, 1)"}}>
 
             {/* PHASE HEADER */}
@@ -525,7 +573,7 @@ export default function Roadmap(){
       </div>
 
       {/* FOOTER */}
-      <div style={{borderTop:"1px solid var(--border)",padding:"24px 52px",textAlign:"center"}}>
+      <div className="footer">
         <p style={{fontFamily:"'Clash Display',sans-serif",fontSize:16,color:"var(--sub)",lineHeight:1.6}}>
           By the end of this you'll be working, legal, banked, and settled. <span style={{color:"var(--accent)"}}>The life you've been building toward finally exists in the same room.</span>
         </p>
