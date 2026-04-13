@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef, Fragment, useLayoutEffect } from "react";
+import { createPortal } from "react-dom";
 import { Scale, Briefcase, Coffee, ChevronRight, ChevronDown, AlertTriangle, Clock, Target, Link2, Sun, Moon, Plane, MapPin, Check, BookOpen, FileText, ExternalLink, Phone, Calendar, Award, Send, Download, Globe, DollarSign } from "lucide-react";
 
 const GOALS = {
@@ -565,14 +566,96 @@ function getNextIncomplete(checked){
   return null;
 }
 
-function GlossaryTooltip({ term, children }) {
+function GlossaryTooltip({ term, children, dark }) {
   const [show, setShow] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0, placement: "above" });
+  const [mobile, setMobile] = useState(false);
+  const triggerRef = useRef(null);
+  const tooltipRef = useRef(null);
   const glossaryEntry = findGlossaryTerm(term);
-  
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px)");
+    const fn = () => setMobile(mq.matches);
+    fn();
+    mq.addEventListener("change", fn);
+    return () => mq.removeEventListener("change", fn);
+  }, []);
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    const tip = tooltipRef.current;
+    if (!trigger || !tip || mobile) return;
+    const r = trigger.getBoundingClientRect();
+    const margin = 8;
+    const tw = tip.offsetWidth;
+    const th = tip.offsetHeight;
+    let left = r.left + r.width / 2;
+    left = Math.max(tw / 2 + margin, Math.min(left, window.innerWidth - tw / 2 - margin));
+    let placement = "above";
+    let top;
+    if (r.top >= th + margin + 4) {
+      top = r.top - th - margin;
+      placement = "above";
+    } else {
+      top = r.bottom + margin;
+      placement = "below";
+    }
+    if (top + th > window.innerHeight - margin && placement === "below") {
+      if (r.top - th - margin >= margin) {
+        top = r.top - th - margin;
+        placement = "above";
+      }
+    }
+    if (top < margin) top = margin;
+    setPos({ top, left, placement });
+  }, [mobile]);
+
+  useLayoutEffect(() => {
+    if (!show || !glossaryEntry || mobile) return;
+    updatePosition();
+  }, [show, glossaryEntry, mobile, updatePosition]);
+
+  useLayoutEffect(() => {
+    if (!show || mobile) return;
+    const handler = () => updatePosition();
+    window.addEventListener("scroll", handler, true);
+    window.addEventListener("resize", handler);
+    return () => {
+      window.removeEventListener("scroll", handler, true);
+      window.removeEventListener("resize", handler);
+    };
+  }, [show, mobile, updatePosition]);
+
   if (!glossaryEntry) return children;
-  
+
+  const tooltipEl =
+    show &&
+    typeof document !== "undefined" &&
+    createPortal(
+      <span
+        ref={tooltipRef}
+        className={`glossary-tooltip-portal ${dark ? "glossary-tooltip-portal--dark" : ""} ${mobile ? "glossary-tooltip-portal--mobile" : ""} ${!mobile && pos.placement === "below" ? "glossary-tooltip-portal--below" : ""}`}
+        role="tooltip"
+        style={
+          mobile
+            ? undefined
+            : {
+                top: pos.top,
+                left: pos.left,
+              }
+        }
+      >
+        <strong>{glossaryEntry.term}</strong>
+        <br />
+        {glossaryEntry.def}
+      </span>,
+      document.body
+    );
+
   return (
-    <span 
+    <span
+      ref={triggerRef}
       className="glossary-tooltip-trigger"
       onMouseEnter={() => setShow(true)}
       onMouseLeave={() => setShow(false)}
@@ -585,18 +668,12 @@ function GlossaryTooltip({ term, children }) {
       aria-label={`Definition: ${glossaryEntry.def}`}
     >
       {children}
-      {show && (
-        <span className="glossary-tooltip" role="tooltip">
-          <strong>{glossaryEntry.term}</strong>
-          <br />
-          {glossaryEntry.def}
-        </span>
-      )}
+      {tooltipEl}
     </span>
   );
 }
 
-function TextWithTooltips({ text }) {
+function TextWithTooltips({ text, dark }) {
   const parts = enrichTextWithTooltips(text);
   
   if (typeof parts === 'string') {
@@ -611,7 +688,7 @@ function TextWithTooltips({ text }) {
         }
         if (part.type === 'glossary') {
           return (
-            <GlossaryTooltip key={part.key} term={part.term}>
+            <GlossaryTooltip key={part.key} term={part.term} dark={dark}>
               <span className="glossary-term-highlight">{part.term}</span>
             </GlossaryTooltip>
           );
@@ -622,7 +699,7 @@ function TextWithTooltips({ text }) {
   );
 }
 
-function EnhancedStepDetail({ step, stepId, goalTheme, subChecked, toggleSubCheck }) {
+function EnhancedStepDetail({ step, stepId, goalTheme, subChecked, toggleSubCheck, dark }) {
   const structured = structureDetailText(step.detail);
   const resources = extractResources(step.detail);
   const duration = extractDuration(step.detail);
@@ -695,7 +772,7 @@ function EnhancedStepDetail({ step, stepId, goalTheme, subChecked, toggleSubChec
           if (section.type === 'para') {
             return (
               <p key={idx} className="detail-para">
-                <TextWithTooltips text={section.content} />
+                <TextWithTooltips text={section.content} dark={dark} />
               </p>
             );
           } else if (section.type === 'subhead') {
@@ -704,14 +781,14 @@ function EnhancedStepDetail({ step, stepId, goalTheme, subChecked, toggleSubChec
             return (
               <ul key={idx} className="detail-list">
                 {section.items && section.items.map((item, i) => (
-                  <li key={i}><TextWithTooltips text={item} /></li>
+                  <li key={i}><TextWithTooltips text={item} dark={dark} /></li>
                 ))}
               </ul>
             );
           } else if (section.type === 'callout') {
             return (
               <div key={idx} className="detail-callout">
-                <TextWithTooltips text={section.content} />
+                <TextWithTooltips text={section.content} dark={dark} />
               </div>
             );
           }
@@ -741,7 +818,7 @@ function EnhancedStepDetail({ step, stepId, goalTheme, subChecked, toggleSubChec
   );
 }
 
-function DetailText({ text, style }) {
+function DetailText({ text, style, dark }) {
   if (!text) return null;
   
   // For phase context text, apply tooltips while preserving formatting
@@ -771,7 +848,7 @@ function DetailText({ text, style }) {
         }
         if (part.type === 'glossary') {
           return (
-            <GlossaryTooltip key={part.key} term={part.term}>
+            <GlossaryTooltip key={part.key} term={part.term} dark={dark}>
               <span className="glossary-term-highlight">{part.term}</span>
             </GlossaryTooltip>
           );
@@ -1219,12 +1296,15 @@ export default function Roadmap(){
         .glossary-term-def{font-size:14px;line-height:1.6;color:var(--sub);margin:0}
         .glossary-term-highlight{color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:help}
         .glossary-tooltip-trigger{position:relative;display:inline}
-        .glossary-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1A1612;color:#F7F5F0;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;max-width:280px;width:max-content;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:100;pointer-events:none;animation:fi .2s ease}
-        .root.dark .glossary-tooltip{background:#E8E0D4;color:#1A1612}
-        .glossary-tooltip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1A1612}
-        .root.dark .glossary-tooltip::after{border-top-color:#E8E0D4}
-        .glossary-tooltip strong{display:block;margin-bottom:4px;font-weight:700}
-        @media(max-width:768px){.glossary-tooltip{position:fixed;bottom:auto;top:50%;left:50%;transform:translate(-50%, -50%);max-width:calc(100vw - 40px);pointer-events:auto}.glossary-tooltip::after{display:none}}
+        .glossary-tooltip-portal{position:fixed;z-index:10000;pointer-events:none;background:#1A1612;color:#F7F5F0;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;font-family:'Open Sans',Helvetica,Arial,sans-serif;max-width:min(280px,calc(100vw - 24px));width:max-content;box-shadow:0 8px 24px rgba(0,0,0,0.25);transform:translateX(-50%);animation:fi .2s ease}
+        .glossary-tooltip-portal--dark{background:#E8E0D4;color:#1A1612}
+        .glossary-tooltip-portal::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1A1612}
+        .glossary-tooltip-portal--below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1A1612}
+        .glossary-tooltip-portal--dark::after{border-top-color:#E8E0D4}
+        .glossary-tooltip-portal--dark.glossary-tooltip-portal--below::after{border-top-color:transparent;border-bottom-color:#E8E0D4}
+        .glossary-tooltip-portal strong{display:block;margin-bottom:4px;font-weight:700}
+        .glossary-tooltip-portal--mobile{top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;pointer-events:auto;max-width:calc(100vw - 40px)}
+        .glossary-tooltip-portal--mobile::after{display:none}
         .overview-hint{text-align:center;font-size:14px;color:var(--muted);margin-top:32px;line-height:1.55;max-width:480px;margin-left:auto;margin-right:auto}
         .topbar-back{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--accent);font-family:'Open Sans',Helvetica,Arial,sans-serif;padding:8px 12px;min-height:44px;border-radius:8px;margin-right:4px;flex-shrink:0}
         .topbar-back:hover{background:var(--hl)}
@@ -1423,7 +1503,7 @@ export default function Roadmap(){
                       ))}
                     </div>
                     <div className="chapter-card-blurb">
-                      <TextWithTooltips text={ch.blurb} />
+                      <TextWithTooltips text={ch.blurb} dark={dark} />
                     </div>
                     <div className="chapter-comp-wrap">
                       <div className="chapter-comp-bar" title="Mix of Legal, Work, and Setup steps in this chapter">
@@ -1657,7 +1737,7 @@ export default function Roadmap(){
                 </div>
                 {cur.milestone&&<div className="stamp" style={{marginBottom:8,borderColor:domColor,color:domColor}}><MapPin size={12} strokeWidth={2.5}/>Milestone</div>}
               </div>
-              <DetailText text={cur.context} style={{fontSize:16, lineHeight:1.65, fontWeight:400, position:"relative", zIndex:1}} />
+              <DetailText text={cur.context} dark={dark} style={{fontSize:16, lineHeight:1.65, fontWeight:400, position:"relative", zIndex:1}} />
             </div>
 
             <DocumentChainDiagram phaseId={cur.id} checked={checked} />
@@ -1720,11 +1800,11 @@ export default function Roadmap(){
                             <div style={{padding:"8px 12px",marginBottom:10,borderRadius:6,background:"var(--warn-bg)",borderLeft:"3px solid var(--warn-b)",display:"flex",alignItems:"flex-start",gap:6}}>
                               <AlertTriangle size={12} strokeWidth={2.5} style={{color:"var(--warn-t)",flexShrink:0,marginTop:1}}/>
                               <span style={{fontSize:12,color:"var(--warn-t)",lineHeight:1.55}}>
-                                <TextWithTooltips text={s0.warning} />
+                                <TextWithTooltips text={s0.warning} dark={dark} />
                               </span>
                             </div>
                           )}
-                          <EnhancedStepDetail step={s0} stepId={`${cur.id}-${s0Idx}`} goalTheme={G0.theme} subChecked={subChecked} toggleSubCheck={toggleSubCheck} />
+                          <EnhancedStepDetail step={s0} stepId={`${cur.id}-${s0Idx}`} goalTheme={G0.theme} subChecked={subChecked} toggleSubCheck={toggleSubCheck} dark={dark} />
                         </div>
                         <div className="hero-summary" style={{display: expanded===s0Idx ? "none" : "flex", position:"relative",alignItems:"center",gap:6,color:G0.color,fontSize:12,fontWeight:600}}>
                           Tap to expand <ChevronDown size={13} strokeWidth={2.5} style={{animation:"nudge 2s ease 1.5s infinite"}}/>
@@ -1783,11 +1863,11 @@ export default function Roadmap(){
                                   <div style={{padding:"8px 12px",marginBottom:12,borderRadius:8,background:"var(--warn-bg)",borderLeft:"4px solid var(--warn-b)",display:"flex",alignItems:"flex-start",gap:8}}>
                                     <AlertTriangle size={16} strokeWidth={2.5} style={{color:"var(--warn-t)",flexShrink:0,marginTop:2}}/>
                                     <span style={{fontSize:12,color:"var(--warn-t)",lineHeight:1.55}}>
-                                      <TextWithTooltips text={step.warning} />
+                                      <TextWithTooltips text={step.warning} dark={dark} />
                                     </span>
                                   </div>
                                 )}
-                                <EnhancedStepDetail step={step} stepId={`${cur.id}-${si}`} goalTheme={G.theme} subChecked={subChecked} toggleSubCheck={toggleSubCheck} />
+                                <EnhancedStepDetail step={step} stepId={`${cur.id}-${si}`} goalTheme={G.theme} subChecked={subChecked} toggleSubCheck={toggleSubCheck} dark={dark} />
                               </div>
                             </div>
                           </div>
