@@ -1,18 +1,19 @@
 import { useState, useEffect, useCallback, useRef, Fragment, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
-import { Scale, Briefcase, Coffee, ChevronRight, ChevronDown, AlertTriangle, Clock, Target, Link2, Sun, Moon, Plane, MapPin, Check, BookOpen, FileText, ExternalLink, Phone, Calendar, Award, Send, Download, Globe, DollarSign } from "lucide-react";
+import { Scale, Briefcase, Coffee, ChevronRight, ChevronDown, AlertTriangle, Clock, Target, Link2, Sun, Moon, Plane, MapPin, Check, BookOpen, FileText, ExternalLink, Phone, Calendar, Award, Send, Download, Globe, DollarSign, HeartPulse } from "lucide-react";
 
 const GOALS = {
   pdh: { id:"pdh", label:"Pareja de Hecho", short:"Legal", color:"var(--gold)", theme:"gold", bg:"var(--gold-bg)", Icon:Scale },
   work: { id:"work", label:"Employment", short:"Work", color:"var(--steel)", theme:"steel", bg:"var(--steel-bg)", Icon:Briefcase },
   setup: { id:"setup", label:"Daily Life", short:"Setup", color:"var(--sage)", theme:"sage", bg:"var(--sage-bg)", Icon:Coffee },
+  health: { id:"health", label:"Health Insurance", short:"Health", color:"var(--rose)", theme:"rose", bg:"var(--rose-bg)", Icon:HeartPulse },
 };
 
 const PHASES = [
   { id:"now", date:"Now — Apr '26", label:"Start here", num:"01", dominant:"work",
     context:`You have roughly a year before arrival — and that window is not "extra time" you can spend later. Certifications take months to sit and pass. US documents have ordering delays and apostilles have a ~3‑month validity clock once stamped. Spanish compounds day by day. Treat this year as the only runway you get: use it now so you are not scrambling in March with half-finished exams and half-ordered papers.`,
     steps:[
-      { goal:"work", title:"Start studying for CompTIA A+", detail:`A+ is two exams: Core 1 (220‑1101) and Core 2 (220‑1102). Budget ~2–3 focused hours per day and about three months per exam if you are starting from zero — faster if you already know hardware/OS basics. Book through Pearson VUE when ready. Free video: Professor Messer (professormesser.com). Paid depth: Mike Meyers or Jason Dion on Udemy. In Spain, A+ plus Network+ signals "hireable IT support" without fluent Spanish — many helpdesk and remote roles list them explicitly. Exam fees run about $530 total for both parts.`, cost:"$530 for both exams" },
+      { goal:"work", title:"Start studying for CompTIA A+", detail:`CompTIA A+ is the standard entry-level IT certification — it proves you can troubleshoot hardware, install and configure operating systems, and support a basic corporate network. No prior experience required. It is vendor-neutral (not tied to Microsoft or Apple), internationally recognized, and the first thing Spanish employers look for on a foreign IT résumé. The exam comes in two parts: Core 1 (220‑1101) and Core 2 (220‑1102). Budget ~2–3 focused hours per day and about three months per exam if you are starting from zero — faster if you already know hardware/OS basics. Book through Pearson VUE when ready. Free video: Professor Messer (professormesser.com). Paid depth: Mike Meyers or Jason Dion on Udemy. In Spain, A+ plus Network+ signals "hireable IT support" without fluent Spanish — many helpdesk and remote roles list them explicitly. Exam fees run about $530 total for both parts.`, cost:"$530 for both exams" },
       { goal:"setup", title:"Open a Wise account", detail:`Sign up at wise.com with your US passport. You get a European IBAN (Belgian BE…) you can give employers, landlords, and Spanish paperwork before you have a Spanish bank. Fund it from your US bank via ACH or debit; convert USD→EUR at Wise's rate and hold or spend in euros. Limits depend on verification level — complete ID early. Wise is not a full bank: you will not run Spanish utility direct debits from it long term, but it is the cleanest bridge for wires, rent deposits, and day‑one money movement.`, cost:"Free" },
       { goal:"setup", title:"Start learning Spanish", detail:`Aim for about A2 by arrival — enough to read simple forms, follow an office clerk with help, and not freeze in a shop. You do not need C1. Foundations: Language Transfer (free, ~15 hours of audio, genuinely strong on structure). Daily habit: Duolingo for vocabulary and streak discipline. Conversation: HelloTalk or Tandem once you can string sentences. Zaragoza is standard Castilian — clear for learners and useful everywhere in Spain.`, cost:"Free" },
       { goal:"work", title:"Save toward $2,000–3,000", detail:`This is your job-hunt and bureaucracy cushion in euros after you land. Zaragoza is cheaper than Madrid or Barcelona; without rent your burn rate is mostly food, transport, phone, insurance co-pays, and occasional gestoría fees. $2–3k is roughly a 3–6 month runway if you are frugal — enough to say no to bad jobs and to absorb "we need one more document" delays without panic. Keep part of it in Wise/EUR so you are not waiting on US transfers during week one.`, },
@@ -42,12 +43,12 @@ const PHASES = [
     ],
   },
   { id:"feb2027", date:"Feb '27", label:"Apostilles & insurance", num:"05", dominant:"pdh",
-    context:`An apostille is a one-page Hague Convention stamp that says your state's signature on a document is real. Spanish offices will not accept plain US certificates without it. Critical: many registries expect you to present documents within ~3 months of the apostille date — the clock starts when Kansas stamps it, not when you walk into an office in Spain. February is the sweet spot for a spring arrival.`,
+    context:`An apostille is a one-page Hague Convention stamp that says your state's signature on a document is real. Spanish offices will not accept plain US certificates without it. Important: apostilles don't have a fixed legal expiry date, but in practice the Aragón registry — and many Spanish offices — prefer documents to be recent, and some offices informally apply a ~3-month freshness window. The clock starts when Kansas stamps it, not when you walk into an office in Spain. February is the sweet spot for a spring arrival; do not apostille in November.`,
     steps:[
-      { goal:"pdh", title:"Apostille birth certificate", detail:`Kansas Secretary of State authenticates documents for foreign use. Mailing address often listed as 915 SW Harrison St, Topeka KS 66612; you can also confirm current instructions at sos.ks.gov. Include Form DC, $10 per document, and a prepaid return envelope (FedEx or USPS with tracking). Processing often 3–5 business days; call 785‑296‑4564 before you mail if rules changed. Send by tracked mail — these papers are your legal identity abroad.`, cost:"$40–60", urgent:true, chain:true, warning:"Do this in February, not earlier. Documents must be used within ~3 months of apostille date." },
+      { goal:"pdh", title:"Apostille birth certificate", detail:`Kansas Secretary of State authenticates documents for foreign use. Mailing address: 915 SW Harrison St, Topeka KS 66612; confirm current instructions at sos.ks.gov before sending. Include a cover letter listing each document, a check or money order for $10 per document payable to "Secretary of State", and a prepaid return envelope (FedEx or USPS with tracking). Processing often 3–5 business days; call 785‑296‑4564 to confirm current requirements before you mail. Send by tracked mail — these papers are your legal identity abroad.`, cost:"$40–60", urgent:true, chain:true, warning:"Do this in February, not earlier. Spanish offices prefer recent apostilles — some informally apply a ~3-month freshness window." },
       { goal:"pdh", title:"Apostille Single Status document", detail:`Same envelope, same office, same fee structure as the birth certificate apostille. Staple a short cover letter listing both documents and your return address. One tracked package saves a week of mail time and reduces the risk the two apostilles end up on different dates. When they return, verify the apostille is attached to the correct original — do not separate them.`, cost:"$40–60", urgent:true, chain:true },
       { goal:"pdh", title:"Find a sworn translator", detail:`You need a traductor jurado listed on Spain's Ministry of Foreign Affairs registry. Official list: exteriores.gob.es → Servicios al ciudadano → Traductores e intérpretes (filter inglés). Email 2–3 for quotes per document and turnaround; ask explicitly that they are active on the current MFA list. Many accept PDF scans for a quote, then need originals by courier (DHL). Get the quote and delivery promise in writing. Typical range ~€50–80 per document, but confirm with each translator.`, cost:"~€50–80/doc", chain:true },
-      { goal:"setup", title:"Choose health insurance plan", detail:`Until you are employed in Spain's system, you need private coverage. For later residency (tarjeta), Extranjería expects a policy sin copagos (no copay per visit) with full coverage — plans with high copays get rejected. Compare Sanitas, Adeslas, and Asisa; Sanitas Más Salud Sin Copago (or similar "sin copagos" product) is a common choice. Request a formal certificado de cobertura in Spanish before you travel — you will need it in the residency dossier. Budget roughly €50–100/month depending on age and product.`, cost:"~€50–100/mo" },
+      { goal:"health", title:"Choose health insurance plan", detail:`Until you are employed in Spain's system, you need private coverage. For later residency (tarjeta), Extranjería expects a policy sin copagos (no copay per visit) with full coverage — plans with high copays get rejected. Compare Sanitas, Adeslas, and Asisa; Sanitas Más Salud Sin Copago (or similar "sin copagos" product) is a common choice. Request a formal certificado de cobertura in Spanish before you travel — you will need it in the residency dossier. Budget roughly €50–100/month depending on age and product.`, cost:"~€50–100/mo" },
     ],
   },
   { id:"mar2027", date:"Mar '27", label:"Translations & appointments", num:"06", dominant:"pdh",
@@ -117,8 +118,8 @@ function getCosts(){
   return{usd:`$${Math.round(uMin/50)*50}–${Math.round(uMax/50)*50}`,eur:`€${Math.round(eMin/50)*50}–${Math.round(eMax/50)*50}`};
 }
 
-const GOAL_COLORS_RAW = { pdh:"var(--gold)", work:"var(--steel)", setup:"var(--sage)" };
-const GOAL_THEMES = { pdh:"gold", work:"steel", setup:"sage" };
+const GOAL_COLORS_RAW = { pdh:"var(--gold)", work:"var(--steel)", setup:"var(--sage)", health:"var(--rose)" };
+const GOAL_THEMES = { pdh:"gold", work:"steel", setup:"sage", health:"rose" };
 
 /** Concrete outcomes you will have after each chapter — shown as scannable chips on the overview. */
 const CHAPTER_OUTCOMES = {
@@ -240,25 +241,25 @@ const GLOSSARY = {
     title: "Spanish Terms",
     terms: [
       { term: "Apostille", def: "A Hague Convention stamp that authenticates a document for international use. Required for US documents to be accepted in Spain." },
-      { term: "Ayuntamiento", def: "City hall / municipal government office where you register your address." },
+      { term: "Ayuntamiento", def: "City hall / municipal government office where you register your address (empadronamiento)." },
       { term: "Certificado de empadronamiento", def: "Certificate proving you are registered at a Spanish address. Required for opening bank accounts, NIE, and many official processes." },
       { term: "DNI (Documento Nacional de Identidad)", def: "Spanish national ID card for citizens. Your partner will use this for most official paperwork." },
-      { term: "Empadronamiento", def: "Municipal registration that proves you live at a specific address in Spain. One of the first steps after arrival." },
-      { term: "Escritura pública", def: "Public deed signed before a notary. For pareja de hecho, this is the legal contract declaring your partnership." },
-      { term: "Extranjería", def: "Immigration office that handles foreign resident permits and legal status." },
-      { term: "Fe de soltería", def: "Certificate of single status, proving you are not married. Spanish equivalent of the US 'Verification of No Marriage' letter." },
-      { term: "Gestoría", def: "Administrative service that helps with Spanish bureaucracy. They can book appointments, prepare documents, and navigate official processes for a fee (~€50-300)." },
-      { term: "NIE (Número de Identidad de Extranjero)", def: "Foreigner identification number. Required to open bank accounts, sign contracts, work legally, and complete most official processes in Spain." },
-      { term: "NUSS (Número de Afiliación a la Seguridad Social)", def: "Social Security number required for formal employment in Spain." },
-      { term: "Notaría", def: "Notary office where official documents are signed and authenticated." },
-      { term: "Padrón", def: "Municipal register of residents. Being 'on the padrón' means you are empadronado." },
-      { term: "Pareja de Hecho", def: "Registered domestic partnership (unmarried stable partnership). Legal status in Aragón that allows family reunification for residency." },
-      { term: "Registro Civil", def: "Civil registry office that issues official certificates (birth, marriage, single status)." },
-      { term: "Resguardo", def: "Receipt or proof document given while waiting for the final official document. For example, NIE resguardo proves your NIE is in process." },
-      { term: "SEPE (Servicio Público de Empleo Estatal)", def: "Public employment service. Register here to access their job board and be in the national unemployment system." },
-      { term: "Sin copagos", def: "Without copayments. Health insurance with sin copagos means no per-visit fees, required for residency applications." },
-      { term: "Tarjeta de Residencia / TIE", def: "Physical residence card proving your legal right to live in Spain. Obtained after pareja de hecho registration." },
-      { term: "Traductor jurado", def: "Sworn translator officially registered with Spain's Ministry of Foreign Affairs. Only their translations are accepted for legal documents." },
+      { term: "Empadronamiento", def: "Municipal registration that proves you live at a specific address in Spain. One of the first steps after arrival. Required for NIE, bank accounts, health card." },
+      { term: "Escritura pública", def: "Public deed signed before a notary. For pareja de hecho, this is the legal contract declaring your partnership. Must be signed before registry inscription." },
+      { term: "Extranjería", def: "Immigration office that handles foreign resident permits and legal status. In Zaragoza, handles tarjeta de residencia applications." },
+      { term: "Fe de soltería", def: "Certificate of single status, proving you are not married. Spanish equivalent of the US 'Verification of No Marriage' letter. Your partner obtains this from Registro Civil." },
+      { term: "Gestoría", def: "Administrative service that helps with Spanish bureaucracy. They can book appointments, prepare documents, and navigate official processes for a fee (~50-300). Worth it for NIE and residency." },
+      { term: "NIE (Número de Identidad de Extranjero)", def: "Foreigner identification number. Required to open bank accounts, sign contracts, work legally, and complete most official processes in Spain. Your first 'ID' in Spain." },
+      { term: "NUSS (Número de Afiliación a la Seguridad Social)", def: "Social Security number required for formal employment in Spain. Similar to US Social Security number but for Spanish employment tracking." },
+      { term: "Notaría", def: "Notary office where official documents are signed and authenticated. For pareja de hecho, you sign the escritura pública here." },
+      { term: "Padrón", def: "Municipal register of residents. Being 'on the padrón' means you are empadronado. Updated every 2 years if you move." },
+      { term: "Pareja de Hecho", def: "Registered domestic partnership (unmarried stable partnership). Legal status in Aragón that allows family reunification for residency. Not the same as marriage - different requirements and process." },
+      { term: "Registro Civil", def: "Civil registry office that issues official certificates (birth, marriage, single status). In Zaragoza: Calle Alfonso I nº 17." },
+      { term: "Resguardo", def: "Receipt or proof document given while waiting for the final official document. For example, NIE resguardo proves your NIE is in process and can be used for banking." },
+      { term: "SEPE (Servicio Público de Empleo Estatal)", def: "Public employment service. Register here to access their job board and be in the national unemployment system. Also known as 'INEM' informally." },
+      { term: "Sin copagos", def: "Without copayments. Health insurance with sin copagos means no per-visit fees. Required for residency applications - plans with high copays get rejected." },
+      { term: "Tarjeta de Residencia / TIE", def: "Physical residence card (Tarjeta de Identidad de Extranjero) proving your legal right to live in Spain. Obtained after pareja de hecho registration and residency application." },
+      { term: "Traductor jurado", def: "Sworn translator officially registered with Spain's Ministry of Foreign Affairs. Only their translations are accepted for legal documents. Find at exteriores.gob.es." },
     ]
   },
   us: {
@@ -279,13 +280,21 @@ const GLOSSARY = {
   tech: {
     title: "IT Certifications & Work",
     terms: [
-      { term: "A+ (CompTIA A+)", def: "Entry-level IT certification covering hardware, OS basics, troubleshooting, and networking fundamentals. Two exams: Core 1 (220-1101) and Core 2 (220-1102). Cost: ~$530 total." },
+      { term: "CompTIA", def: "Computing Technology Industry Association. US-based nonprofit that provides vendor-neutral IT certifications (A+, Network+, Security+, etc.). Recognized internationally and often listed in Spanish job ads as preferred or required." },
+      { term: "A+ (CompTIA A+)", def: "Entry-level IT certification covering hardware, OS basics, troubleshooting, and networking fundamentals. Two exams: Core 1 (220-1101) and Core 2 (220-1102). Cost: ~$530 total. Often the minimum requirement for helpdesk roles in Spain." },
+      { term: "Network+ (CompTIA Network+)", def: "Certification covering networking concepts, protocols, troubleshooting, and security. Unlocks network tech and junior sysadmin roles. One exam: ~$390. Builds on A+ knowledge." },
+      { term: "Professor Messer", def: "Free YouTube channel with comprehensive CompTIA exam prep videos. The most popular free resource for A+ and Network+. Search 'Professor Messer A+' or 'Professor Messer Network+'." },
+      { term: "Jason Dion", def: "Instructor on Udemy known for CompTIA exam prep courses. His practice exams are considered highly accurate to the actual test. Often cited as the best paid resource for Network+." },
+      { term: "Mike Meyers", def: "Author and instructor (CompTIA CertMaster) known for the 'All-in-One' exam guide books. Another popular paid option for A+ and Network+ prep." },
+      { term: "Udemy", def: "Online learning platform with paid video courses. Search 'CompTIA A+ Jason Dion' or 'CompTIA Network+ Jason Dion' for exam prep. Often runs sales for ~$15-20 per course." },
+      { term: "Pearson VUE", def: "Testing center network where CompTIA certification exams are booked and taken. Find a nearby center at home.pearsonvue.com. Exams are proctored in-person." },
       { term: "ATS (Applicant Tracking System)", def: "Software that scans resumes for keywords before a human sees them. Use terms like 'soporte técnico', 'helpdesk', 'incidencias', 'remoto', 'CompTIA' in your Spanish CV." },
       { term: "BPO (Business Process Outsourcing)", def: "Companies that handle customer service, tech support, and back-office work for other businesses. Often hire English speakers in Spain (e.g. Atento, Teleperformance)." },
       { term: "Helpdesk / Service Desk", def: "First point of contact for IT support. Typical entry role in Spain for English speakers with A+ and Network+. Spanish: 'soporte técnico' or 'mesa de ayuda'." },
-      { term: "ITIL", def: "IT Infrastructure Library. Framework for IT service management sometimes mentioned in Spanish job ads alongside CompTIA certs." },
-      { term: "MSP (Managed Service Provider)", def: "Company that manages IT infrastructure for multiple clients. Often hires for remote helpdesk and on-site support roles." },
-      { term: "Network+ (CompTIA Network+)", def: "Certification covering networking concepts, protocols, troubleshooting, and security. Unlocks network tech and junior sysadmin roles. One exam: ~$390." },
+      { term: "ITIL", def: "IT Infrastructure Library. Framework for IT service management sometimes mentioned in Spanish job ads alongside CompTIA certs. Not required but a nice-to-have." },
+      { term: "MSP (Managed Service Provider)", def: "Company that manages IT infrastructure for multiple clients. Often hires for remote helpdesk and on-site support roles. Good target for English-first positions." },
+      { term: "InfoJobs", def: "Major Spanish job board (infojobs.net). Use for scouting IT support roles in Zaragoza and remote positions. Search 'soporte técnico', 'helpdesk', 'informática'." },
+      { term: "Tecnoempleo", def: "Spanish tech-focused job board (tecnoempleo.com). Often has more IT-specific listings than general job sites." },
     ]
   },
   financial: {
@@ -299,7 +308,17 @@ const GLOSSARY = {
       { term: "LT IBAN", def: "Lithuanian IBAN (starts with LT). Revolut EU accounts use this." },
       { term: "N26", def: "German digital bank. Often requires stronger EU residency proof than day-one newcomers have. Wise + Revolut EU is the easier pair." },
       { term: "Revolut EU", def: "European version of Revolut (Lithuanian IBAN). Separate from Revolut US. Need EU address proof to open." },
-      { term: "Wise (formerly TransferWise)", def: "Money transfer service that provides a Belgian (BE) IBAN for receiving euros before you have a Spanish bank. Not a full bank — no Spanish direct debits." },
+      { term: "Wise (formerly TransferWise)", def: "Money transfer service that provides a Belgian (BE) IBAN for receiving euros before you have a Spanish bank. Not a full bank - no Spanish direct debits." },
+      { term: "Santander", def: "Spanish bank (one of the largest in eurozone). Commonly used by US citizens because they are experienced with W-9/FATCA paperwork. Requires NIE and empadronamiento to open." },
+    ]
+  },
+  health: {
+    title: "Health Insurance",
+    terms: [
+      { term: "Sanitas", def: "Major Spanish private health insurance company. Popular with expats. Their 'Más Salud Sin Copago' plan is commonly accepted for residency applications. Offers English support." },
+      { term: "Adeslas", def: "One of Spain's largest health insurers. Often competitive pricing. Check that their specific plan meets 'sin copagos' residency requirements." },
+      { term: "Asisa", def: "Spanish health insurance provider. Another option for residency-compliant coverage. Compare quotes with Sanitas and Adeslas." },
+      { term: "Certificado de cobertura", def: "Certificate of coverage from your health insurance. Required for residency application proving you have full coverage without gaps." },
     ]
   }
 };
@@ -1055,10 +1074,10 @@ export default function Roadmap(){
         @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap');
         @import url('https://fonts.cdnfonts.com/css/clash-display');
         .root{
-          --gold-rgb:196,149,106;--steel-rgb:78,140,175;--sage-rgb:94,158,88;
-          --gold:#C4956A;--steel:#4E8CAF;--sage:#5E9E58;
-          --gold-bg:rgba(196,149,106,0.1);--steel-bg:rgba(78,140,175,0.08);--sage-bg:rgba(94,158,88,0.08);
-          --gold-border:rgba(196,149,106,0.25);--steel-border:rgba(78,140,175,0.2);--sage-border:rgba(94,158,88,0.2);
+          --gold-rgb:196,149,106;--steel-rgb:78,140,175;--sage-rgb:94,158,88;--rose-rgb:200,100,130;
+          --gold:#C4956A;--steel:#4E8CAF;--sage:#5E9E58;--rose:#C86482;
+          --gold-bg:rgba(196,149,106,0.1);--steel-bg:rgba(78,140,175,0.08);--sage-bg:rgba(94,158,88,0.08);--rose-bg:rgba(200,100,130,0.1);
+          --gold-border:rgba(196,149,106,0.25);--steel-border:rgba(78,140,175,0.2);--sage-border:rgba(94,158,88,0.2);--rose-border:rgba(200,100,130,0.25);
           --bg:#EFEBE4;--surface:#F7F5F0;--card:#FFFFFF;
           --text:#1A1612;--sub:#5A5248;--muted:#8A8078;--dim:#C2BAB0;
           --border:rgba(0,0,0,0.07);--border-l:rgba(0,0,0,0.04);
@@ -1070,12 +1089,18 @@ export default function Roadmap(){
           --hover-shadow:0 24px 48px rgba(0,0,0,0.09);
           --track:rgba(0,0,0,0.10);
           --grain:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+          /* Design tokens - Spacing (4px grid) */
+          --space-2xs:4px;--space-xs:8px;--space-s:12px;--space-m:16px;--space-l:24px;--space-xl:32px;--space-2xl:48px;--space-3xl:64px;
+          /* Design tokens - Radius */
+          --radius-xs:2px;--radius-s:4px;--radius-m:8px;--radius-l:16px;--radius-pill:9999px;
+          /* Design tokens - Z-index */
+          --layer-base:0;--layer-raised:10;--layer-dropdown:100;--layer-sticky:200;--layer-overlay:300;--layer-drawer:400;--layer-modal:500;--layer-toast:600;--layer-tooltip:700;
         }
         .root.dark{
-          --gold-rgb:212,168,122;--steel-rgb:106,172,206;--sage-rgb:122,190,116;
-          --gold:#D4A87A;--steel:#6AACCE;--sage:#7ABE74;
-          --gold-bg:rgba(212,168,122,0.1);--steel-bg:rgba(106,172,206,0.08);--sage-bg:rgba(122,190,116,0.07);
-          --gold-border:rgba(212,168,122,0.2);--steel-border:rgba(106,172,206,0.15);--sage-border:rgba(122,190,116,0.15);
+          --gold-rgb:212,168,122;--steel-rgb:106,172,206;--sage-rgb:122,190,116;--rose-rgb:220,140,160;
+          --gold:#D4A87A;--steel:#6AACCE;--sage:#7ABE74;--rose:#DCA0B0;
+          --gold-bg:rgba(212,168,122,0.1);--steel-bg:rgba(106,172,206,0.08);--sage-bg:rgba(122,190,116,0.07);--rose-bg:rgba(220,140,160,0.1);
+          --gold-border:rgba(212,168,122,0.2);--steel-border:rgba(106,172,206,0.15);--sage-border:rgba(122,190,116,0.15);--rose-border:rgba(220,140,160,0.2);
           --bg:#0E0D0B;--surface:#161513;--card:#1C1A17;
           --text:#E8E0D4;--sub:#C4BCB3;--muted:#A8A39D;--dim:#7A7268;
           --border:rgba(255,255,255,0.06);--border-l:rgba(255,255,255,0.03);
@@ -1086,12 +1111,18 @@ export default function Roadmap(){
           --shadow:0 2px 8px rgba(0,0,0,0.3);
           --hover-shadow:0 24px 48px rgba(0,0,0,0.6);
           --track:rgba(255,255,255,0.10);
+          /* Design tokens - Spacing (4px grid) */
+          --space-2xs:4px;--space-xs:8px;--space-s:12px;--space-m:16px;--space-l:24px;--space-xl:32px;--space-2xl:48px;--space-3xl:64px;
+          /* Design tokens - Radius */
+          --radius-xs:2px;--radius-s:4px;--radius-m:8px;--radius-l:16px;--radius-pill:9999px;
+          /* Design tokens - Z-index */
+          --layer-base:0;--layer-raised:10;--layer-dropdown:100;--layer-sticky:200;--layer-overlay:300;--layer-drawer:400;--layer-modal:500;--layer-toast:600;--layer-tooltip:700;
         }
         *{box-sizing:border-box;margin:0;padding:0}
-        *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;z-index:20;border-radius:2px}
+        *:focus-visible{outline:2px solid var(--accent);outline-offset:2px;z-index:var(--layer-raised);border-radius:var(--radius-xs)}
         button:focus-visible{outline-color:var(--text)}
         .root{min-height:100vh;background:var(--bg);color:var(--text);font-family:'Open Sans', Helvetica, Arial, sans-serif;transition:background .3s,color .3s;position:relative}
-        .root::before{content:'';position:fixed;inset:0;background-image:var(--grain);background-repeat:repeat;background-size:256px;pointer-events:none;z-index:999;opacity:.5}
+        .root::before{content:'';position:fixed;inset:0;background-image:var(--grain);background-repeat:repeat;background-size:256px;pointer-events:none;z-index:var(--layer-toast);opacity:.5}
         @keyframes si{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
         @keyframes fi{from{opacity:0}to{opacity:1}}
         @keyframes stamp{from{opacity:0;transform:scale(.6) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(-4deg)}}
@@ -1099,8 +1130,8 @@ export default function Roadmap(){
         @keyframes slide-right{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
         @keyframes nudge{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
         .layout{display:grid;grid-template-columns:250px 1fr;min-height:calc(100vh - 48px)}
-        @media(max-width:1024px){.layout{grid-template-columns:1fr}.sidebar{display:none !important}.mob-nav-wrap{display:block !important;position:sticky !important;top:48px;background:var(--bg);z-index:9;border-bottom:1px solid var(--border)}.mob-b{font-size:12px;padding:8px 12px;border-radius:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}}
-        .sidebar{border-right:1px solid var(--border);position:sticky;top:48px;height:calc(100vh - 48px);overflow:hidden;display:flex;flex-direction:column}
+        @media(max-width:768px){.layout{grid-template-columns:1fr}.sidebar{display:none !important}.mob-nav-wrap{display:block !important;position:sticky !important;top:48px;background:var(--bg);z-index:var(--layer-sticky);border-bottom:1px solid var(--border)}.mob-b{font-size:12px;padding:8px 12px;border-radius:var(--radius-l);touch-action:manipulation;-webkit-tap-highlight-color:transparent}}
+        .sidebar{border-right:1px solid var(--border);position:sticky;top:48px;height:calc(100vh - 48px);overflow:hidden;display:flex;flex-direction:column;z-index:var(--layer-sticky)}
         .sidebar::-webkit-scrollbar{width:0}
         .ph-btn{display:flex;align-items:flex-start;gap:12px;padding:12px 20px;min-height:44px;cursor:pointer;border:none;background:none;text-align:left;width:100%;color:var(--text);transition:all .12s;position:relative;font-family:'Open Sans', Helvetica, Arial, sans-serif}
         .ph-btn:hover{background:var(--hl)}
@@ -1141,14 +1172,14 @@ export default function Roadmap(){
           .hero-card { margin-bottom: 20px !important; box-shadow: none !important; border: 2px solid var(--border) !important; }
           .step-row { margin-bottom: 10px !important; border: 1px solid var(--border) !important; }
         }
-        .topbar{height:48px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+        .topbar{height:48px;display:flex;justify-content:space-between;align-items:center;padding:0 24px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:var(--layer-sticky)}
         .topbar-right{display:flex;align-items:center;gap:16px}
         .topbar-sep{width:1px;height:14px;background:var(--border);flex-shrink:0}
         .topbar-cost{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap}
         .main-pane{background:var(--card);flex:1;min-width:0;overflow-x:hidden}
         .main-content{padding:48px 56px 80px;overflow:hidden}
         .footer{border-top:1px solid var(--border);padding:24px 56px;text-align:center}
-        @media(max-width:1024px){
+        @media(max-width:768px){
           .topbar{padding:0 16px}
           .topbar-right{gap:8px}
           .main-content{padding:32px 32px 64px}
@@ -1168,11 +1199,11 @@ export default function Roadmap(){
         }
         .overview-layout{max-width:1180px;margin:0 auto;padding:48px 24px 64px;animation:si .45s cubic-bezier(0.34, 1.56, 0.64, 1)}
         .overview-hero{text-align:center;margin-bottom:44px}
-        .overview-hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--accent);background:var(--gold-bg);padding:4px 16px;border-radius:16px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
+        .overview-hero-badge{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--accent);background:var(--gold-bg);padding:4px 16px;border-radius:var(--radius-l);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px}
         .overview-hero h1{font-family:'Clash Display',sans-serif;font-size:clamp(32px,7vw,48px);font-weight:600;letter-spacing:-0.03em;line-height:1.15;color:var(--text);margin-bottom:16px}
         .overview-hero p{font-size:16px;line-height:1.65;color:var(--sub);max-width:580px;margin:0 auto}
         .overview-cta-wrap{display:flex;justify-content:center;margin-bottom:40px}
-        .overview-cta{background:var(--text);color:var(--bg);border:none;border-radius:16px;padding:24px 32px;cursor:pointer;transition:transform .2s, box-shadow .2s;text-align:left;display:flex;align-items:center;gap:24px;width:100%;max-width:540px;box-shadow:var(--shadow)}
+        .overview-cta{background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-l);padding:24px 32px;cursor:pointer;transition:transform .2s, box-shadow .2s;text-align:left;display:flex;align-items:center;gap:24px;width:100%;max-width:540px;box-shadow:var(--shadow)}
         .overview-cta:hover{transform:translateY(-2px);box-shadow:var(--hover-shadow)}
         .overview-cta-content{flex:1;min-width:0}
         .overview-cta-title{font-family:'Clash Display',sans-serif;font-size:24px;font-weight:600;letter-spacing:-0.02em;margin-bottom:8px;color:var(--bg)}
@@ -1196,7 +1227,7 @@ export default function Roadmap(){
           .overview-timeline .chapter-node-circle--mobile{display:flex;position:absolute;left:0;top:28px;width:40px;height:40px;z-index:2}
           .chapter-node-circle--mobile .chapter-node-num{font-size:9px}
         }
-        .chapter-card{position:relative;overflow:hidden;text-align:left;border:1px solid var(--border);border-radius:16px;padding:28px 24px 24px;background:var(--card);cursor:pointer;transition:all .3s cubic-bezier(0.2, 0.8, 0.2, 1);font-family:'Open Sans',Helvetica,Arial,sans-serif;color:var(--text);width:100%;-webkit-tap-highlight-color:transparent;box-shadow:var(--shadow);flex:1}
+        .chapter-card{position:relative;overflow:hidden;text-align:left;border:1px solid var(--border);border-radius:var(--radius-l);padding:28px 24px 24px;background:var(--card);cursor:pointer;transition:all .3s cubic-bezier(0.2, 0.8, 0.2, 1);font-family:'Open Sans',Helvetica,Arial,sans-serif;color:var(--text);width:100%;-webkit-tap-highlight-color:transparent;box-shadow:var(--shadow);flex:1}
         .chapter-card:hover{background:var(--surface)}
         .chapter-card-arrow{position:absolute;right:28px;top:40px;opacity:0;transform:translateX(-10px);transition:all .3s cubic-bezier(0.2, 0.8, 0.2, 1);color:var(--text)}
         .chapter-card:hover .chapter-card-arrow{opacity:1;transform:translateX(0)}
@@ -1296,7 +1327,7 @@ export default function Roadmap(){
         .glossary-term-def{font-size:14px;line-height:1.6;color:var(--sub);margin:0}
         .glossary-term-highlight{color:var(--accent);text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;cursor:help}
         .glossary-tooltip-trigger{position:relative;display:inline}
-        .glossary-tooltip-portal{position:fixed;z-index:10000;pointer-events:none;background:#1A1612;color:#F7F5F0;padding:10px 12px;border-radius:8px;font-size:12px;line-height:1.5;font-family:'Open Sans',Helvetica,Arial,sans-serif;max-width:min(280px,calc(100vw - 24px));width:max-content;box-shadow:0 8px 24px rgba(0,0,0,0.25);transform:translateX(-50%);animation:fi .2s ease}
+        .glossary-tooltip-portal{position:fixed;z-index:var(--layer-tooltip);pointer-events:none;background:#1A1612;color:#F7F5F0;padding:10px 12px;border-radius:var(--radius-m);font-size:12px;line-height:1.5;font-family:'Open Sans',Helvetica,Arial,sans-serif;max-width:min(280px,calc(100vw - 24px));width:max-content;box-shadow:0 8px 24px rgba(0,0,0,0.25);transform:translateX(-50%);animation:fi .2s ease}
         .glossary-tooltip-portal--dark{background:#E8E0D4;color:#1A1612}
         .glossary-tooltip-portal::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#1A1612}
         .glossary-tooltip-portal--below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:#1A1612}
@@ -1586,6 +1617,7 @@ export default function Roadmap(){
                     {key === 'us' && <FileText size={16} strokeWidth={2} style={{color:isActive?"var(--steel)":"currentColor"}}/>}
                     {key === 'tech' && <Briefcase size={16} strokeWidth={2} style={{color:isActive?"var(--steel)":"currentColor"}}/>}
                     {key === 'financial' && <Target size={16} strokeWidth={2} style={{color:isActive?"var(--sage)":"currentColor"}}/>}
+                    {key === 'health' && <HeartPulse size={16} strokeWidth={2} style={{color:isActive?"var(--rose)":"currentColor"}}/>}
                     {section.title}
                   </button>
                 );
